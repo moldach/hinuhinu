@@ -1,0 +1,7 @@
+Title: hinuhunu: Shiny App for maps of Hawaii
+License: MIT
+DisplayMode: Normal
+Author: Matthew J. Oldach <moldach686@gmail.com>
+AuthorUrl: http://www.moldach.github.com
+Type: Shiny
+Tags: sf selectize datatables absolutepanel
