@@ -1,0 +1,13 @@
+location,relief,filename
+Hawaii,none,hawaii_land_basemap_noRelief.rds
+Hawaii,100m,hawaii_land_100m_basemap.rds
+Hawaii,200m,hawaii_land_200m_basemap.rds
+Maui,none,maui_land_basemap_noRelief.rds
+Maui,100m,maui_land_100m_basemap.rds
+Maui,200m,maui_land_200m_basemap.rds
+Oahu,none,oahu_land_basemap_noRelief.rds
+Oahu,100m,oahu_land_100m_basemap.rds
+Oahu,200m,oahu_land_200m_basemap.rds
+Kauai,none,kauai_land_basemap_noRelief.rds
+Kauai,100m,kauai_land_100m_basemap.rds
+Kauai,200m,kauai_land_200m_basemap.rds
