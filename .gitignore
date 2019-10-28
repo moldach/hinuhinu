@@ -2,3 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+
+# data
+data/basemaps
+data/shapefiles
