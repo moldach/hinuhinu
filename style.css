@@ -1,0 +1,57 @@
+/*Use Courier font throughout app*/
+
+* {
+  font-family: 'Courier', cursive !important;
+}
+
+/*Colour hyperlinks*/
+a {
+  color: #5f4c4c;
+}
+
+a:hover {
+  color: #4c3c3c;
+}
+
+/*Colour of nav bar Title*/
+.navbar-default .navbar-brand{
+  color: #4c3c3c;
+}
+
+/*Colour of nav bar tabs when hovering and active*/
+.navbar-default .navbar-nav > .active > a, 
+                           .navbar-default .navbar-nav > .active > a:focus, 
+                           .navbar-default .navbar-nav > .active > a:hover {
+                                color: #4c3c3c;
+                            }
+
+/*Change appearance of checkboxes*/
+input[type="checkbox"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  /* Styling checkbox */
+  width: 16px;
+  height: 16px;
+  border: 1px solid black;
+  box-shadow: #F4F4F4;
+  background-color: #DCD0C0;
+}
+
+input[type="checkbox"]:checked {
+  border: 1px solid black;
+  box-shadow: #F4F4F4;
+  background-color: #DCD0C0;
+}
+
+input[type="checkbox"]:checked:after {
+  display: block;
+  box-shadow: #F4F4F4;
+}
+
+input[type="checkbox"]:disabled:after {
+  border-color: black;
+  box-shadow: #F4F4F4;
+}
+   
