@@ -1,0 +1,38 @@
+Layer Name:	Hawaii Humpback Whale National Marine Sanctuary
+
+Coverage Name:	hihwnms
+
+Layer Type:	Polygon
+
+Status:		Complete
+
+Geog. Extent:	Main Hawaiian Islands
+
+Projection:	Universal Trans Mercator, Zone 4, Meters
+
+Datum:		NAD 83
+
+Description:	HumpbackWhale National Marine Sanctuary boundaries for the State of Hawaii.
+		
+Source:		NOAA National Marine Sanctuary Program
+
+History:	Received by Office of Planning from NOAA National Marine Sanctuary Program,
+		March, 2006.  OP staff projected from geographic to UTM coordinates.  
+		Please see hihwnms.xml for more information as to compilation
+		procedures.
+		
+Attributes:	Polygons:
+
+		SANCTUARY	Sanctuary Name
+		DATUM		Geographic Datum of Coordinates
+		AREA_NAME	Sanctuary Area Name
+		POLY_ID		Polygon ID
+		AREA_KM		Area in square kilometers
+		AREA_NM		Area in square nautical miles
+		AREA_SM		Area in square statute miles
+		AREA_ACRES	Area in acres
+
+		
+Contact:	Joan Delos Santos, Office of Planning, State of Hawaii, 
+		PO Box 2359, Honolulu, Hi.  96804; (808) 587-2895.
+		email:  JDelos_Santos@dbedt.hawaii.gov

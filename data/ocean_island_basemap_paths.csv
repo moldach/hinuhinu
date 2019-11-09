@@ -1,0 +1,10 @@
+location,relief,filename
+Hawaii,none,hawaii_ocean_depth_basemap_noRelief.rds
+Hawaii,100m,hawaii_ocean_depth_100m_basemap.rds
+Hawaii,200m,hawaii_ocean_depth_200m_basemap.rds
+Oahu & Maui,none,oahu_molokai_maui_ocean_depth_basemap_noRelief.rds
+Oahu & Maui,100m,oahu_molokai_maui_ocean_depth_100m_basemap.rds
+Oahu & Maui,200m,oahu_molokai_maui_ocean_depth_200m_basemap.rds
+Kauai,none,kauai_ocean_depth_basemap_noRelief.rds
+Kauai,100m,kauai_ocean_depth_100m_basemap.rds
+Kauai,200m,kauai_ocean_depth_200m_basemap.rds
