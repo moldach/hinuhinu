@@ -1,20 +1,35 @@
-# Mahalo
-> 🌴🥥🌺 A Shiny App showcasing map of Hawaii 🍍🐠🦜 
+[![lifecycle](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 
-> "Hinuhinu" is the Hawaiian word for **shiny** - welcome to my `R` Shiny App of the same name.  
+# Mahalo: Create Maps of Hawaii directly from R and Shiny
+> "**Hinuhinu**": the Hawaiian word for **shiny**
 
 ![Recordit GIF](http://g.recordit.co/rxhSU7IQ08.gif)
 
-> #rstats #spatial #ggplot2 #sf
+> 🌴🥥🌺 A Shiny App for maps of Hawaii 🍍🐠🦜 
 
 **hinuhinu** is a Shiny application that lets you quickly create maps of Hawaii. 
 The code to generate the basemaps can be found in [**mahalo**](https://github.com/moldach/mahalo) repository.
 
-## Team
+## Installation
 
-| <a href="https://moldach.github.io/" target="_blank">**Personal Website**</a>
-| [![Peronal Website](https://avatars2.githubusercontent.com/u/5749465?s=460&v=4s=200)](https://moldach.github.io/)
-| <a href="https://github.com/moldach" target="_blank">`github.com/moldach`</a>
+You can install the development version of `hinuhinu` from [Github] with:
+
+``` r
+# install.packages("remotes")
+remotes::install_github("moldach/hinuhinu")
+```
+
+---
+
+## Deployments
+
+`hinuhinu` is also available on the Shinyapps.io hosting service at []()
+
+---
+
+## Development
+
+Contributions are welcome! Suggestions and feedback are always appreciated
 
 ---
 
@@ -44,4 +59,3 @@ Reach out to me at one of the following places!
 [![License](http://img.shields.io/:license-mit-blue.svg?style=flat-square)](http://badges.mit-license.org)
 
 - **[MIT license](http://opensource.org/licenses/mit-license.php)**
-- Copyright 2015 © <a href="http://fvcproductions.com" target="_blank">FVCproductions</a>.
