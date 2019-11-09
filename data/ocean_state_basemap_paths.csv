@@ -2,6 +2,6 @@ location,relief,filename
 Ocean Depth,none,state_ocean_depth_basemap_noRelief.rds
 Ocean Depth,100m,state_ocean_depth_100m_basemap.rds
 Ocean Depth,200m,state_ocean_depth_200m_basemap.rds
-State Map,none,state_ocean_noRelief_basemap.rds
+State Map,none,state_ocean_basemap_noRelief.rds
 State Map,100m,state_ocean_100m_basemap.rds
 State Map,200m,state_ocean_200m_basemap.rds

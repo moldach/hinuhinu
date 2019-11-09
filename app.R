@@ -1,6 +1,4 @@
-#* save the following code in a file named app.R *
 library(shiny)
-library(shinyWidgets)
 library(sf)
 library(tibble)
 library(here)
@@ -9,8 +7,10 @@ library(raster)
 library(dplyr)
 library(ggplot2)
 library(showtext)
-library(colorspace) # for darken
+library(colorspace)
 library(stringr)
+library(readr)
+library(purrr)
 
 # Add custom fonts
 font_add_google("Hanalei", "Hanalei")
@@ -41,11 +41,11 @@ hunting_vec <- c("Closed",
                  "Birds Only",
                  "Mammals Only")
 
-## Second Tab - Ocean Maps
-ocean_state_df <- read.csv(here::here("data/ocean_state_basemap_paths.csv"))
+## Second Tab - State Maps
+state_df <- read.csv(here::here("data/ocean_state_basemap_paths.csv"))
 
-ocean_state_layers <- tibble(
-  layer = c("none", "Explosives Dumping", "Whale Sanctuaries", "Boating", "Fishing Aggregators", "Surfing Spots", "Shipwrecks")
+state_layers <- tibble(
+  state_layer = c("none", "Explosives Dumping", "Whale Sanctuaries", "Small Boat Harbor", "Fishing Aggregators", "Surfing Spots", "Shipwrecks")
 )
 
 ### load the different layers
@@ -54,33 +54,59 @@ state_explosive_geo <- sf::read_sf(here::here("data/shapefiles/oceans/dumping/ex
 
 #### whale sanctuary
 state_whale_geo <- sf::read_sf(here::here("data/shapefiles/oceans/whales/state_whale_sanctuary.shp"))
+state_whale_geo$AREA_NAME <- str_replace_all(state_whale_geo$AREA_NAME, pattern = "KAUAI", replacement = "Kauai")
+state_whale_geo$AREA_NAME <- str_replace_all(state_whale_geo$AREA_NAME, pattern = "NORTH OAHU", replacement = "Oahu")
+state_whale_geo$AREA_NAME <- str_replace_all(state_whale_geo$AREA_NAME, pattern = "SOUTH OAHU", replacement = "Oahu")
+state_whale_geo$AREA_NAME <- str_replace_all(state_whale_geo$AREA_NAME, pattern = "BIG ISLAND", replacement = "Hawaii")
+
 
 #### boating
 state_boating_geo <- sf::read_sf(here::here("data/shapefiles/oceans/boating/state_boating.shp"))
+state_boating_geo %>% filter(facility == "Small Boat Harbor") -> state_boating_geo
 
 #### fishing
 state_fishing_geo <- sf::read_sf(here::here("data/shapefiles/oceans/fishing/fish_aggregators.shp"))
 
-#### surfing
-state_surfing_geo <- sf::read_sf(here::here("data/shapefiles/oceans/surfing/state_surfing.shp"))
-
 #### wrecks
 state_wrecks_geo <- sf::read_sf(here::here("data/shapefiles/oceans/wrecks/wrecks.shp"))
 
-# ## Third Tab - Ocean Maps (Zoom)
-# 
-# hawaii_boating_geo <- sf::read_sf(here::here("data/shapefiles/oceans/boating/hawaii_boating.shp"))
-# maui_boating_geo <- sf::read_sf(here::here("data/shapefiles/oceans/boating/maui_boating.shp"))
-# oahu_boating_geo <- sf::read_sf(here::here("data/shapefiles/oceans/boating/oahu_boating.shp"))
-# islands_boating_geo <- rbind(oahu_boating_geo, maui_boating_geo)
-# kauai_boating_geo <- sf::read_sf(here::here("data/shapefiles/oceans/boating/kauai_boating.shp"))
+## Third Tab - Ocean Maps (Zoom)
+island_ocean_df <- read.csv(here::here("data/ocean_island_basemap_paths.csv"))
+
+island_ocean_layers <- tibble(
+  island_ocean_layer = c("none", "Whale Sanctuaries", "Small Boat Harbor", "Fishing Aggregators", "Surfing Spots")
+)
+
+#### surfing
+hawaii_surfing_geo <- sf::read_sf(here::here("data/shapefiles/oceans/surfing/hawaii_surfing.shp"))
+hawaii_surfing_geo$island <- rep("Hawaii", nrow(hawaii_surfing_geo))
+maui_surfing_geo <- sf::read_sf(here::here("data/shapefiles/oceans/surfing/maui_surfing.shp"))
+maui_surfing_geo$island <- rep("Maui", nrow(maui_surfing_geo))
+oahu_surfing_geo <- sf::read_sf(here::here("data/shapefiles/oceans/surfing/oahu_surfing.shp"))
+oahu_surfing_geo$island <- rep("Oahu", nrow(oahu_surfing_geo))
+kauai_surfing_geo <- sf::read_sf(here::here("data/shapefiles/oceans/surfing/kauai_surfing.shp"))
+kauai_surfing_geo$island <- rep("Kauai", nrow(kauai_surfing_geo))
+state_surfing_geo <- rbind(hawaii_surfing_geo, maui_surfing_geo, oahu_surfing_geo, kauai_surfing_geo)
+
+island_whale_geo <- state_whale_geo
+island_whale_geo$AREA_NAME <- str_replace_all(island_whale_geo$AREA_NAME, pattern = "Oahu", replacement = "Oahu & Maui")
+island_whale_geo$AREA_NAME <- str_replace_all(island_whale_geo$AREA_NAME, pattern = "LANAI", replacement = "Oahu & Maui")
+island_boating_geo <- state_boating_geo
+island_boating_geo$island <- str_replace_all(island_boating_geo$island, pattern = "Oahu", replacement = "Oahu & Maui")
+island_boating_geo$island <- str_replace_all(island_boating_geo$island, pattern = "Maui", replacement = "Oahu & Maui")
+island_surfing_geo <- state_surfing_geo
+island_surfing_geo$island <- str_replace_all(island_surfing_geo$island, pattern = "Oahu", replacement = "Oahu & Maui")
+island_surfing_geo$island <- str_replace_all(island_surfing_geo$island, pattern = "Maui", replacement = "Oahu & Maui")
+island_fishing_geo <- state_fishing_geo
+island_fishing_geo$island <- str_replace_all(island_fishing_geo$island, pattern = "Oahu", replacement = "Oahu & Maui")
+island_fishing_geo$island <- str_replace_all(island_fishing_geo$island, pattern = "Maui", replacement = "Oahu & Maui")
 
 ## Fourth Tab - Island Maps
 
 island_df <- read.csv(here::here("data/island_basemap_paths.csv"))
 
 island_layers <- tibble(
-  layer = c("none", "Hotels", "Banks", "Golf Courses", "Hunting Zones")
+  island_layer = c("none", "Golf Courses", "Hunting Zones", "Hotels", "Banks")
 )
 
 
@@ -109,70 +135,91 @@ hunting_geo$Status <- str_replace_all(hunting_geo$Status, pattern = "Hunting Are
 hunting_geo$Status <- str_replace_all(hunting_geo$Status, pattern = "Hunting Area \\(Bird ONLY\\)", replacement = "Birds Only")
 hunting_geo$Status <- str_replace_all(hunting_geo$Status, pattern = "Hunting Area", replacement = "Mammals & Birds")
 
+road_df <- read.csv(here::here("data/road_basemap_paths.csv"))
+
+road_layers <- tibble(
+  road_layer = c("none", "Banks", "Fire Stations", "Hospitals", "Hotels", "Precincts")
+)
+
+#### firestations
+fire_geo <- sf::read_sf(here::here("data/shapefiles/locations/firestations/firestations_state.shp"))
+#### hospitals
+hawaii_hospitals_geo <- sf::read_sf(here::here("data/shapefiles/locations/hospitals/hawaii_hospitals.shp"))
+hawaii_hospitals_geo$island <- rep("Hawaii", nrow(hawaii_hospitals_geo))
+maui_hospitals_geo <- sf::read_sf(here::here("data/shapefiles/locations/hospitals/maui_hospitals.shp"))
+maui_hospitals_geo$island <- rep("Hawaii", nrow(maui_hospitals_geo))
+oahu_hospitals_geo <- sf::read_sf(here::here("data/shapefiles/locations/hospitals/oahu_hospitals.shp"))
+oahu_hospitals_geo$island <- rep("Hawaii", nrow(oahu_hospitals_geo))
+kauai_hospitals_geo <- sf::read_sf(here::here("data/shapefiles/locations/hospitals/kauai_hospitals.shp"))
+kauai_hospitals_geo$island <- rep("Hawaii", nrow(kauai_hospitals_geo))
+hospitals_geo <- rbind(hawaii_hospitals_geo, maui_hospitals_geo, oahu_hospitals_geo, kauai_hospitals_geo)
+#### precints
+precincts_geo <- sf::read_sf(here::here("data/shapefiles/locations/police/policestations_state.shp"))
+
+# load latitude/longitude coordinates for cities
+cities_geolocation <- read_csv(here::here("data/cities_geolocation.csv"))
+
 ## Section 2 ____________________________________________________
 # set up the user interface
 ui <- navbarPage("hinuhinu",
                  tabPanel("Intro", includeCSS("style.css"),
                           fluidPage(h1("The Hawaiian Islands"),
                                     br(),
-                                    p(strong(em("Eddie Would Go"), "Eddie Aikau, Hawaiian Hero")),
+                                    p(strong(em("\"Eddie Would Go...\""), "Eddie Aikau - Polynesian Voyaging Society")),
                                     br(),
+                                    p("There has been a rich history of map making in Hawaii ever since Polynesians rowed in on their outriggers."),
                                     p("The European discovery of Hawaii occurred on January 18, 1778, when English ships under the command of Captain James Cook sighted the islands of Oahu an Kauai.", 
                                       "Cook was conducting one of the great exploratory voyages of history and ", 
                                       a("mapmaking was an integral part of his work.", href = "https://www.storyofhawaiimuseum.com/the-story-of-hawaii/")), 
-                                    p("Today with new technological tools and ", a("open data ", href = "https://en.wikipedia.org/wiki/Open_data"), "we can easily map out weather, tides, and other activities on land and sea."),
-                                    p("Using advanced computer techiques, scientists, planners and residents can visualize the impace of development throughout Hawaii"),
+                                    p("Today with new technological tools and ", a("open data ", href = "https://en.wikipedia.org/wiki/Open_data"), "stunning maps can be created at our fingertips easier then ever."),
                                     p("Play with this interactive tool and find out!"),
                                     br(),
                                     br(),
-                                    div(img(src = "is-work.png", height = 420, width = 1000), style="text-align: center;"),
+                                    div(img(src = "intro_figure.png", height = 420, width = 1000), style="text-align: center;"),
                                     br(),
                                     br(),
                                     br(),
                                     div(p(strong("Built by"), a("Matt.0", href = "https://twitter.com/mattoldach"), "using the power of Rstudio and Shiny."), 
                                         p(strong("Sources:"), a("State of Hawaii Office of Planning", href = "https://planning.hawaii.gov/gis/download-gis-data/"), "for shapefiles,", a("EarthWorks", href = "https://earthworks.stanford.edu/catalog/stanford-qh711pf3383"), "for rasters"),
-                                        style="text-align: right;"),
-                                    setBackgroundColor("#F5F5F2")
+                                        style="text-align: right;")
                           )
                  ),
                  tabPanel("State Maps",
                           fluidPage(sidebarLayout(position = "right",
                                                   sidebarPanel( # designates location of following items
-                                                    wellPanel(style = "background: #F5F5F2",
+                                                    wellPanel(style = "background: #E5C595",
                                                               h4("Choose Island:"),
-                                                              htmlOutput("ocean_state_basemap_selector"),
-                                                              br()),
-                                                    wellPanel(style = "background: #F5F5F2",
+                                                              htmlOutput("state_basemap_selector")),
+                                                    wellPanel(style = "background: #E5C595",
                                                               h4("Choose Elevation Raster:"),
-                                                              htmlOutput("ocean_state_relief_selector"),
-                                                              br()),
-                                                    wellPanel(style = "background: #F5F5F2",
+                                                              htmlOutput("state_relief_selector")),
+                                                    wellPanel(style = "background: #E5C595",
                                                               h4("Overlay GIS Layer:"),
-                                                              htmlOutput("ocean_state_layer_selector"),
-                                                              br())
+                                                              htmlOutput("state_layer_selector")),
+                                                    radioButtons(inputId = "plot1", label = "Select the file type to download", choices = list("png", "pdf")),
+                                                    downloadButton(outputId = "down1", label = "Download the plot")
                                                   ),
-
+                                                  
                                                   mainPanel(
                                                     plotOutput("plot1")
                                                   )
                           )
                  )
                  ),
-                 tabPanel("Island Maps",
+                 tabPanel("Island Maps: Ocean",
                           fluidPage(sidebarLayout(position = "right",
                                                   sidebarPanel( # designates location of following items
-                                                    wellPanel(style = "background: #F5F5F2",
+                                                    wellPanel(style = "background: #E5C595",
                                                               h4("Choose Island:"),
-                                                              htmlOutput("island_basemap_selector"),
-                                                              br()),
-                                                    wellPanel(style = "background: #F5F5F2",
+                                                              htmlOutput("island_ocean_basemap_selector")),
+                                                    wellPanel(style = "background: #E5C595",
                                                               h4("Choose Elevation Raster:"),
-                                                              htmlOutput("island_relief_selector"),
-                                                              br()),
-                                                    wellPanel(style = "background: #F5F5F2",
+                                                              htmlOutput("island_ocean_relief_selector")),
+                                                    wellPanel(style = "background: #E5C595",
                                                               h4("Overlay GIS Layer:"),
-                                                              htmlOutput("island_layer_selector"),
-                                                              br())
+                                                              htmlOutput("island_ocean_layer_selector")),
+                                                    radioButtons(inputId = "plot2", label = "Select the file type to download", choices = list("png", "pdf")),
+                                                    downloadButton(outputId = "down2", label = "Download the plot")
                                                   ),
                                                   
                                                   mainPanel(
@@ -181,11 +228,52 @@ ui <- navbarPage("hinuhinu",
                           )
                           )
                  ),
-                 tabPanel("Ocean Maps: Islands"),
-                 tabPanel("Slide Show")
-                 
+                 tabPanel("Island Maps: Terrestrial",
+                          fluidPage(sidebarLayout(position = "right",
+                                                  sidebarPanel( # designates location of following items
+                                                    wellPanel(style = "background: #E5C595",
+                                                              h4("Choose Island:"),
+                                                              htmlOutput("island_basemap_selector")),
+                                                    wellPanel(style = "background: #E5C595",
+                                                              h4("Choose Elevation Raster:"),
+                                                              htmlOutput("island_relief_selector")),
+                                                    wellPanel(style = "background: #E5C595",
+                                                              h4("Overlay GIS Layer:"),
+                                                              htmlOutput("island_layer_selector")),
+                                                    radioButtons(inputId = "plot3", label = "Select the file type to download", choices = list("png", "pdf")),
+                                                    downloadButton(outputId = "down3", label = "Download the plot")
+                                                  ),
+                                                  
+                                                  mainPanel(
+                                                    plotOutput("plot3")
+                                                  )
+                          )
+                          )
+                 ),
+                 tabPanel("Road Networks",
+                          fluidPage(sidebarLayout(position = "right",
+                                                  sidebarPanel( # designates location of following items
+                                                    wellPanel(style = "background: #E5C595",
+                                                              h4("Choose Island:"),
+                                                              htmlOutput("road_basemap_selector")),
+                                                    wellPanel(style = "background: #E5C595",
+                                                              h4("Overlay GIS Layer:"),
+                                                              htmlOutput("road_layer_selector")),
+                                                    radioButtons(inputId = "plot4", label = "Select the file type to download", choices = list("png", "pdf")),
+                                                    downloadButton(outputId = "down4", label = "Download the plot")
+                                                  ),
+                                                  
+                                                  mainPanel(
+                                                    plotOutput("plot4")
+                                                  )
+                          )
+                          )
+                 ),
+                 tags$style(type="text/css",
+                            ".shiny-output-error { visibility: hidden; }",
+                            ".shiny-output-error:before { visibility: hidden; }"
+                 )
 )
-
 
 
 ## Section 3 ____________________________________________________
@@ -195,36 +283,36 @@ server <- shinyServer(function(input, output) {
   # creates logic behind ui outputs ** pay attention to letter case in names
   
   ## Second Tab
-  output$ocean_state_basemap_selector <- renderUI({ # creates basemap select box object called in ui
+  output$state_basemap_selector <- renderUI({ # creates basemap select box object called in ui
     selectInput(
-      inputId = "basemap", # name of input
+      inputId = "state_basemap", # name of input
       label = "", # label displayed in ui
-      choices = as.character(unique(ocean_state_df$location)),
+      choices = as.character(unique(state_df$location)),
       # calls unique values from the basemap column in the previously created table
       selected = "State Map"
     ) # default choice (not required)
   })
   
-  output$ocean_state_relief_selector <- renderUI({ # creates relief select box object called in ui
+  output$state_relief_selector <- renderUI({ # creates relief select box object called in ui
     
-    data_available <- ocean_state_df[ocean_state_df$location == input$basemap, "relief"]
-    # creates a reactive list of available reliefs based on the basemap selection made
+    data_available <- state_df[state_df$location == input$state_basemap, "relief"]
+    # creates a reactive list of available reliefs based on the state_basemap selection made
     
     selectInput(
-      inputId = "relief", # name of input
+      inputId = "state_relief", # name of input
       label = "", # label displayed in ui
       choices = unique(data_available), # calls list of available reliefs
       selected = unique(data_available)[1]
     )
   })
   
-  output$ocean_state_layer_selector <- renderUI({ # creates relief select box object called in ui
+  output$state_layer_selector <- renderUI({ # creates relief select box object called in ui
     
-    data_available <- ocean_state_layers
-    # creates a reactive list of available reliefs based on the basemap selection made
+    data_available <- state_layers
+    # creates a reactive list of available reliefs based on the state_basemap selection made
     
     selectInput(
-      inputId = "layer", # name of input
+      inputId = "state_layer", # name of input
       label = "", # label displayed in ui
       choices = unique(data_available), # calls list of available reliefs
       selected = unique(data_available)[1]
@@ -232,49 +320,189 @@ server <- shinyServer(function(input, output) {
   })
   
   output$plot1 <- renderPlot({ # creates a the plot to go in the mainPanel
-    # filter basemaps
-    ocean_state_df %>%
-      filter(location == input$basemap & relief == input$relief) -> ocean_state_df
+    # filter state_basemaps
+    state_df %>%
+      filter(location == input$state_basemap & relief == input$state_relief) -> state_df
     
-    # load the basemap for four main islands
-    state_plot <- readRDS(here::here("data/basemaps/ocean_state", ocean_state_df$filename))
-    if (input$layer == "Explosives Dumping") {
+    # load the state_basemap for four main islands
+    state_plot <- readRDS(here::here("data/basemaps/ocean_state", state_df$filename))
+    
+    if (input$state_layer == "Explosives Dumping") {
       state_plot + geom_sf(data = state_explosive_geo, color = darken("#F98866"), fill = "#F98866")
-    } else if(input$layer == "Whale Sanctuaries"){
+    } else if(input$state_layer == "Whale Sanctuaries"){
       state_plot + geom_sf(data = state_whale_geo, color = darken("#756bb1"), fill = "#756bb1")
-    } else if(input$layer == "Boating"){
+    } else if(input$state_layer == "Small Boat Harbor"){
       state_plot + geom_sf(data = state_boating_geo, color = darken("#9E391A"), fill = "#9E391A", shape = 18, size = 2, alpha = 0.5)
-    } else if(input$layer == "Fishing Aggregators"){
+    } else if(input$state_layer == "Fishing Aggregators"){
       state_plot + geom_sf(data = state_fishing_geo, color = darken("#7C000C"), fill = "#7C000C", size = 2, alpha = 0.5)
-    } else if(input$layer == "Surfing Spots"){
+    } else if(input$state_layer == "Surfing Spots"){
       state_plot + geom_sf(data = state_surfing_geo, color = darken("#B35234"), fill = "#B35234", shape = 16, size = 2, alpha = 0.5)
-    } else if(input$layer == "Shipwrecks"){
+    } else if(input$state_layer == "Shipwrecks"){
       state_plot + geom_sf(data = state_wrecks_geo, color = darken("#963484"), fill = "#963484", shape = 25, size = 2, alpha = 0.5)
     } else {
       state_plot
     }
-  })
-
+  }, bg="#f5f5f2", execOnResize=T, height = 1000, units = "px")
   
+  output$down1 <- downloadHandler(
+    filename =  function() {
+      paste("StateMap", input$plot1, sep=".")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      if(input$plot1 == "png")
+        png(file) # open the png device
+      else
+        pdf(file) # open the pdf device
+      
+      # filter state_basemaps
+      state_df %>%
+        filter(location == input$state_basemap & relief == input$state_relief) -> state_df
+      
+      # load the state_basemap for four main islands
+      state_plot <- readRDS(here::here("data/basemaps/ocean_state", state_df$filename))
+
+      if (input$state_layer == "Explosives Dumping") {
+        print(state_plot + geom_sf(data = state_explosive_geo, color = darken("#F98866"), fill = "#F98866"))
+      } else if(input$state_layer == "Whale Sanctuaries"){
+        print(state_plot + geom_sf(data = state_whale_geo, color = darken("#756bb1"), fill = "#756bb1"))
+      } else if(input$state_layer == "Small Boat Harbor"){
+        print(state_plot + geom_sf(data = state_boating_geo, color = darken("#9E391A"), fill = "#9E391A", shape = 18, size = 2, alpha = 0.5))
+      } else if(input$state_layer == "Fishing Aggregators"){
+        print(state_plot + geom_sf(data = state_fishing_geo, color = darken("#7C000C"), fill = "#7C000C", size = 2, alpha = 0.5))
+      } else if(input$state_layer == "Surfing Spots"){
+        print(state_plot + geom_sf(data = state_surfing_geo, color = darken("#B35234"), fill = "#B35234", shape = 16, size = 2, alpha = 0.5))
+      } else if(input$state_layer == "Shipwrecks"){
+        print(state_plot + geom_sf(data = state_wrecks_geo, color = darken("#963484"), fill = "#963484", shape = 25, size = 2, alpha = 0.5))
+      } else {
+        print(state_plot)
+      }
+      dev.off()
+    } 
+  )
+
   ## Third Tab
   
-  output$island_basemap_selector <- renderUI({ # creates basemap select box object called in ui
+  output$island_ocean_basemap_selector <- renderUI({ # creates island_basemap select box object called in ui
     selectInput(
-      inputId = "basemap", # name of input
+      inputId = "island_ocean_basemap", # name of input
+      label = "", # label displayed in ui
+      choices = as.character(unique(island_ocean_df$location)),
+      # calls unique values from the island_basemap column in the previously created table
+      selected = "Hawaii"
+    ) # default choice (not required)
+  })
+  
+  output$island_ocean_relief_selector <- renderUI({ # creates relief select box object called in ui
+    
+    data_available <- island_ocean_df[island_ocean_df$location == input$island_ocean_basemap, "relief"]
+    # creates a reactive list of available reliefs based on the island_basemap selection made
+    
+    selectInput(
+      inputId = "island_ocean_relief", # name of input
+      label = "", # label displayed in ui
+      choices = unique(data_available), # calls list of available reliefs
+      selected = unique(data_available)[1]
+    )
+  })
+  
+  output$island_ocean_layer_selector <- renderUI({ # creates relief select box object called in ui
+    
+    data_available <- island_ocean_layers
+    # creates a reactive list of available reliefs based on the island_basemap selection made
+    
+    selectInput(
+      inputId = "island_ocean_layer", # name of input
+      label = "", # label displayed in ui
+      choices = unique(data_available), # calls list of available reliefs
+      selected = unique(data_available)[1]
+    )
+  })
+  
+  output$plot2 <- renderPlot({ # creates a the plot to go in the mainPanel
+    # filter state_basemaps
+    island_ocean_df %>%
+      filter(location == input$island_ocean_basemap & relief == input$island_ocean_relief) -> island_ocean_df
+
+    # filter all shapefiles
+    island_whale_geo %>% filter(AREA_NAME == input$island_ocean_basemap) -> island_whale_geo
+    island_boating_geo %>% filter(island == input$island_ocean_basemap) -> island_boating_geo
+    island_fishing_geo %>% filter(island == input$island_ocean_basemap) -> island_fishing_geo
+    island_surfing_geo %>% filter(island == input$island_ocean_basemap) -> island_surfing_geo
+
+    # load the state_basemap for four main islands
+    island_ocean_plot <- readRDS(here::here("data/basemaps/ocean_island", island_ocean_df$filename))
+    if (input$island_ocean_layer == "Whale Sanctuaries"){
+      island_ocean_plot + geom_sf(data = island_whale_geo, color = darken("#756bb1"), fill = "#756bb1")
+    } else if(input$island_ocean_layer == "Small Boat Harbor"){
+      island_ocean_plot + geom_sf(data = island_boating_geo, color = darken("#9E391A"), fill = "#9E391A", shape = 25, size = 4, alpha = 0.5)
+    } else if(input$island_ocean_layer == "Fishing Aggregators"){
+      island_ocean_plot + geom_sf(data = island_fishing_geo, color = darken("#7C000C"), fill = "#7C000C", size = 2, alpha = 0.5)
+    } else if(input$island_ocean_layer == "Surfing Spots"){
+      island_ocean_plot + geom_sf(data = island_surfing_geo, color = darken("#B35234"), fill = "#B35234", shape = 16, size = 2, alpha = 0.5)
+    } else {
+      island_ocean_plot
+    }
+  }, bg="#f5f5f2", execOnResize=T, height = 1000, units = "px")
+  
+  output$down2 <- downloadHandler(
+    filename =  function() {
+      paste("OceanMap", input$plot2, sep=".")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      if(input$plot2 == "png")
+        png(file) # open the png device
+      else
+        pdf(file) # open the pdf device
+      
+      island_ocean_df %>%
+        filter(location == input$island_ocean_basemap & relief == input$island_ocean_relief) -> island_ocean_df
+      # load the state_basemap for four main islands
+      island_ocean_plot <- readRDS(here::here("data/basemaps/ocean_island", island_ocean_df$filename))
+
+      # filter all shapefiles
+      state_whale_geo %>% filter(AREA_NAME == input$island_ocean_basemap) -> state_whale_geo
+      state_boating_geo %>% filter(island == input$island_ocean_basemap) -> state_boating_geo
+      state_fishing_geo %>% filter(island == input$island_ocean_basemap) -> state_fishing_geo
+      
+      if (input$island_ocean_layer == "Whale Sanctuaries"){
+        print(island_ocean_plot + geom_sf(data = state_whale_geo, color = darken("#756bb1"), fill = "#756bb1"))
+      } else if(input$island_ocean_layer == "Small Boat Harbor"){
+        print(island_ocean_plot + geom_sf(data = state_boating_geo, color = darken("#9E391A"), fill = "#9E391A", shape = 18, size = 4, alpha = 0.5))
+      } else if(input$island_ocean_layer == "Fishing Aggregators"){
+        print(island_ocean_plot + geom_sf(data = state_fishing_geo, color = darken("#7C000C"), fill = "#7C000C", size = 2, alpha = 0.5))
+      } else if(input$island_ocean_layer == "Surfing Spots"){
+        print(island_ocean_plot + geom_sf(data = state_surfing_geo, color = darken("#B35234"), fill = "#B35234", shape = 16, size = 2, alpha = 0.5))
+      } else if(input$island_ocean_layer == "Shipwrecks"){
+        print(island_ocean_plot + geom_sf(data = state_wrecks_geo, color = darken("#963484"), fill = "#963484", shape = 25, size = 2, alpha = 0.5))
+      } else {
+        print(island_ocean_plot)
+      }
+      
+      dev.off()
+    } 
+  )
+  
+  ## Fourth Tab
+  
+  output$island_basemap_selector <- renderUI({ # creates island_basemap select box object called in ui
+    selectInput(
+      inputId = "island_basemap", # name of input
       label = "", # label displayed in ui
       choices = as.character(unique(island_df$location)),
-      # calls unique values from the basemap column in the previously created table
+      # calls unique values from the island_basemap column in the previously created table
       selected = "Hawaii"
     ) # default choice (not required)
   })
   
   output$island_relief_selector <- renderUI({ # creates relief select box object called in ui
     
-    data_available <- island_df[island_df$location == input$basemap, "relief"]
-    # creates a reactive list of available reliefs based on the basemap selection made
+    data_available <- island_df[island_df$location == input$island_basemap, "relief"]
+    # creates a reactive list of available reliefs based on the island_basemap selection made
     
     selectInput(
-      inputId = "relief", # name of input
+      inputId = "island_relief", # name of input
       label = "", # label displayed in ui
       choices = unique(data_available), # calls list of available reliefs
       selected = unique(data_available)[1]
@@ -284,43 +512,198 @@ server <- shinyServer(function(input, output) {
   output$island_layer_selector <- renderUI({ # creates relief select box object called in ui
     
     data_available <- island_layers
-    # creates a reactive list of available reliefs based on the basemap selection made
+    # creates a reactive list of available reliefs based on the island_basemap selection made
     
     selectInput(
-      inputId = "layer", # name of input
+      inputId = "island_layer", # name of input
       label = "", # label displayed in ui
       choices = unique(data_available), # calls list of available reliefs
       selected = unique(data_available)[1]
     )
   })
   
-  output$plot2 <- renderPlot({ # creates a the plot to go in the mainPanel
-    # filter basemaps
+  output$plot3 <- renderPlot({ # creates a the plot to go in the mainPanel
+    # filter island_basemaps
     island_df %>%
-      filter(location == input$basemap & relief == input$relief) -> island_df
+      filter(location == input$island_basemap & relief == input$island_relief) -> island_df
     # filter all shapefiles
-    hotels_geo %>% filter(island == input$basemap) -> hotels_geo
-    banks_geo %>% filter(island == input$basemap) -> banks_geo
-    golf_geo %>% filter(island == input$basemap) -> golf_geo
-    hunting_geo %>% filter(Island == input$basemap) -> hunting_geo
+    hotels_geo %>% filter(island == input$island_basemap) -> hotels_geo
+    banks_geo %>% filter(island == input$island_basemap) -> banks_geo
+    golf_geo %>% filter(island == input$island_basemap) -> golf_geo
+    hunting_geo %>% filter(Island == input$island_basemap) -> hunting_geo
     
     # load the basemap for four main islands
-    a_plot <- readRDS(here::here("data/basemaps/land", island_df$filename))
-    if (input$layer == "Hotels") {
-      a_plot + geom_sf(data = hotels_geo, color = darken("#963484"), fill = "#963484", shape = 21, size = 2, alpha = 0.5)
-    } else if(input$layer == "Banks"){
-      a_plot + geom_sf(data = banks_geo, color = darken("#9E391A"), fill = "#9E391A", shape = 21, size = 2, alpha = 0.5)
-    } else if(input$layer == "Golf Courses"){
-      a_plot + geom_sf(data = golf_geo, color = darken("#F98866"), fill = "#F98866", size = 2, alpha = 0.5)  
-    } else if(input$layer == "Hunting Zones"){
+    island_plot <- readRDS(here::here("data/basemaps/land", island_df$filename))
+    if (input$island_layer == "Hotels") {
+      island_plot + geom_sf(data = hotels_geo, color = darken("#963484"), fill = "#963484", shape = 21, size = 2.5, alpha = 0.5)
+    } else if(input$island_layer == "Banks"){
+      island_plot + geom_sf(data = banks_geo, color = darken("#9E391A"), fill = "#9E391A", shape = 21, size = 2.5, alpha = 0.5)
+    } else if(input$island_layer == "Golf Courses"){
+      island_plot + geom_sf(data = golf_geo, color = darken("#F98866"), fill = "#F98866", size = 2)  
+    } else if(input$island_layer == "Hunting Zones"){
       # to-do - create a script to source with palletes!
-      a_plot + 
-        geom_sf(data = hunting_geo, aes(fill = hunting_vec), alpha = 0.5) +
+      island_plot + 
+        geom_sf(data = hunting_geo, aes(fill = Status), alpha = 0.5) +
         scale_fill_manual(values = hunting_colors)
     } else {
-      a_plot
+      island_plot
     }
+  }, bg="#f5f5f2", execOnResize=T, height = 1000, units = "px")
+  
+  output$down3 <- downloadHandler(
+    filename =  function() {
+      paste("IslandMap", input$plot3, sep=".")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      if(input$plot3 == "png")
+        png(file) # open the png device
+      else
+        pdf(file) # open the pdf device
+      
+      island_df %>%
+        filter(location == input$island_basemap & relief == input$island_relief) -> island_df
+      # filter all shapefiles
+      hotels_geo %>% filter(island == input$island_basemap) -> hotels_geo
+      banks_geo %>% filter(island == input$island_basemap) -> banks_geo
+      golf_geo %>% filter(island == input$island_basemap) -> golf_geo
+      hunting_geo %>% filter(Island == input$island_basemap) -> hunting_geo
+      
+      # load the basemap for four main islands
+      island_plot <- readRDS(here::here("data/basemaps/land", island_df$filename))
+      if (input$island_layer == "Hotels") {
+        print(island_plot + geom_sf(data = hotels_geo, color = darken("#963484"), fill = "#963484", shape = 21, size = 2.5, alpha = 0.5))
+      } else if(input$island_layer == "Banks"){
+        print(island_plot + geom_sf(data = banks_geo, color = darken("#9E391A"), fill = "#9E391A", shape = 21, size = 2.5, alpha = 0.5))
+      } else if(input$island_layer == "Golf Courses"){
+        print(island_plot + geom_sf(data = golf_geo, color = darken("#F98866"), fill = "#F98866", size = 2))
+      } else if(input$island_layer == "Hunting Zones"){
+        # to-do - create a script to source with palletes!
+        print(island_plot + geom_sf(data = hunting_geo, aes(fill = Status), alpha = 0.5) + scale_fill_manual(values = hunting_colors))
+      } else {
+        print(island_plot)
+      }
+      
+      dev.off()
+    } 
+  )
+  
+  ## Fifth tab
+
+  output$road_basemap_selector <- renderUI({ # creates island_basemap select box object called in ui
+    selectInput(
+      inputId = "road_basemap", # name of input
+      label = "", # label displayed in ui
+      choices = as.character(unique(road_df$location)),
+      # calls unique values from the island_basemap column in the previously created table
+      selected = "Hawaiian Paradise Park "
+    ) # default choice (not required)
   })
+
+  output$road_layer_selector <- renderUI({ # creates relief select box object called in ui
+
+    data_available <- road_layers
+    # creates a reactive list of available reliefs based on the island_basemap selection made
+
+    selectInput(
+      inputId = "road_layer", # name of input
+      label = "", # label displayed in ui
+      choices = unique(data_available), # calls list of available reliefs
+      selected = unique(data_available)[1]
+    )
+  })
+
+  output$plot4 <- renderPlot({ # creates a the plot to go in the mainPanel
+    # filter island_basemaps
+    road_df %>%
+      filter(location == input$road_basemap) -> road_df
+    # filter all shapefiles
+    city <- cities_geolocation %>% filter(city == input$road_basemap)
+        pt <- data.frame(lat = city$lat, long = city$lon)
+    pt <- pt %>% st_as_sf(coords = c("long", "lat"), crs = 4326) %>% st_transform(2163)
+    circle <- st_buffer(pt, dist = 24140.2)
+    
+    # subset shapefiles to fit city
+    banks_circle <- circle %>% st_transform(st_crs(banks_geo))
+    banks <- st_intersection(banks_circle, banks_geo)
+    fire_circle <- circle %>% st_transform(st_crs(fire_geo))
+    firestations <- st_intersection(fire_circle, fire_geo)
+    hospitals_circle <- circle %>% st_transform(st_crs(hospitals_geo))
+    hospitals <- st_intersection(hospitals_circle, hospitals_geo)
+    hotels_circle <- circle %>% st_transform(st_crs(hotels_geo))
+    hotels <- st_intersection(hotels_circle, hotels_geo)
+    precincts_circle <- circle %>% st_transform(st_crs(precincts_geo))
+    precincts <- st_intersection(precincts_circle, precincts_geo)
+
+    # load the basemap for four main islands
+    road_plot <- readRDS(here::here("data/basemaps/roads", road_df$filename))
+    if (input$road_layer == "Banks") {
+      road_plot + geom_sf(data = banks, color = darken("#963484"), fill = "#963484", shape = 19, size = 3, alpha = 0.7)
+    } else if(input$road_layer == "Firestations"){
+      road_plot + geom_sf(data = firestations, color = darken("#8b0000 "), fill = "#8b0000 ", shape = 19, size = 3, alpha = 0.7)
+    } else if(input$road_layer == "Hospitals"){
+      road_plot + geom_sf(data = hospitals, color = darken("#78ACA8"), fill = "#78ACA8", shape = 19, size = 3, alpha = 0.7)
+    } else if(input$road_layer == "Hotels"){
+      road_plot + geom_sf(data = hotels, color = darken("#E77A5B"), fill = "#E77A5B", shape = 19, size = 3, alpha = 0.7)
+    } else if(input$road_layer == "Precincts"){
+      road_plot + geom_sf(data = precincts, color = darken("#20425B"), fill = "#20425B", shape = 19, size = 3, alpha = 0.7)
+    } else {
+      road_plot
+    }
+  }, bg="#f5f5f2", execOnResize=T, height = 1000, units = "px")
+  
+  output$down4 <- downloadHandler(
+    filename =  function() {
+      paste("RoadMap", input$plot4, sep=".")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      if(input$plot4 == "png")
+        png(file) # open the png device
+      else
+        pdf(file) # open the pdf device
+      
+      road_df %>%
+        filter(location == input$road_basemap) -> road_df
+      # filter all shapefiles
+      city <- cities_geolocation %>% filter(city == input$road_basemap)
+      pt <- data.frame(lat = city$lat, long = city$lon)
+      pt <- pt %>% st_as_sf(coords = c("long", "lat"), crs = 4326) %>% st_transform(2163)
+      circle <- st_buffer(pt, dist = 24140.2)
+      
+      # subset shapefiles to fit city
+      banks_circle <- circle %>% st_transform(st_crs(banks_geo))
+      banks <- st_intersection(banks_circle, banks_geo)
+      fire_circle <- circle %>% st_transform(st_crs(fire_geo))
+      firestations <- st_intersection(fire_circle, fire_geo)
+      hospitals_circle <- circle %>% st_transform(st_crs(hospitals_geo))
+      hospitals <- st_intersection(hospitals_circle, hospitals_geo)
+      hotels_circle <- circle %>% st_transform(st_crs(hotels_geo))
+      hotels <- st_intersection(hotels_circle, hotels_geo)
+      precincts_circle <- circle %>% st_transform(st_crs(precincts_geo))
+      precincts <- st_intersection(precincts_circle, precincts_geo)
+      
+      # load the basemap for four main islands
+      road_plot <- readRDS(here::here("data/basemaps/roads", road_df$filename))
+      if (input$road_layer == "Banks") {
+        print(road_plot + geom_sf(data = banks, color = darken("#963484"), fill = "#963484", shape = 19, size = 3.3, alpha = 0.7))
+      } else if(input$road_layer == "Firestations"){
+        print(road_plot + geom_sf(data = firestations, color = darken("#CE2029"), fill = "#CE2029", shape = 19, size = 3.3, alpha = 0.7))
+      } else if(input$road_layer == "Hospitals"){
+        print(road_plot + geom_sf(data = hospitals, color = darken("#78ACA8"), fill = "#78ACA8", shape = 19, size = 3.3, alpha = 0.7))
+      } else if(input$road_layer == "Hotels"){
+        print(road_plot + geom_sf(data = hotels, color = darken("#E77A5B"), fill = "#E77A5B", shape = 19, size = 3.3, alpha = 0.7))
+      } else if(input$road_layer == "Precincts"){
+        # to-do - create a script to source with palletes!
+        print(road_plot + geom_sf(data = precincts, color = darken("#20425B"), fill = "#20425B", shape = 19, size = 3.3, alpha = 0.7))
+      } else {
+        print(road_plot)
+      }
+      
+      dev.off()
+    } 
+  )
+  
 }) # close the shinyServer
 
 ## Section 4____________________________________________________
