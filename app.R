@@ -640,9 +640,9 @@ server <- shinyServer(function(input, output) {
     if (input$road_layer == "Banks") {
       road_plot + geom_sf(data = banks, color = darken("#963484"), fill = "#963484", shape = 19, size = 3, alpha = 0.7)
     } else if(input$road_layer == "Firestations"){
-      road_plot + geom_sf(data = firestations, color = darken("#8b0000 "), fill = "#8b0000 ", shape = 19, size = 3, alpha = 0.7)
+      road_plot + geom_sf(data = firestations, color = darken("#CE2029"), fill = "#CE2029", shape = 19, size = 3, alpha = 0.7)
     } else if(input$road_layer == "Hospitals"){
-      road_plot + geom_sf(data = hospitals, color = darken("#78ACA8"), fill = "#78ACA8", shape = 19, size = 3, alpha = 0.7)
+      road_plot + geom_sf(data = hospitals, color = darken("#78ACA8"), fill = "#78ACA8", shape = 19, size = 4, alpha = 0.7)
     } else if(input$road_layer == "Hotels"){
       road_plot + geom_sf(data = hotels, color = darken("#E77A5B"), fill = "#E77A5B", shape = 19, size = 3, alpha = 0.7)
     } else if(input$road_layer == "Precincts"){
