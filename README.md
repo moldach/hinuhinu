@@ -13,8 +13,7 @@ The code to generate the basemaps can be found in [**mahalo**](https://github.co
 ## Team
 
 | <a href="https://moldach.github.io/" target="_blank">**Personal Website**</a>
-| :---: |:---:| :---:|
-| [![Peronal Website](https://avatars2.githubusercontent.com/u/5749465?s=460&v=4&s=200)](https://moldach.github.io/)
+| [![Peronal Website](https://avatars2.githubusercontent.com/u/5749465?s=460&v=4s=200)](https://moldach.github.io/)
 | <a href="https://github.com/moldach" target="_blank">`github.com/moldach`</a>
 
 ---
@@ -36,7 +35,8 @@ Reach out to me at one of the following places!
 
 + Twitter at <a href="https://twitter.com/MattOldach" target="_blank">`@MattOldach`</a>
 + E-mail: moldach686@gmail.com
-+ Website: [https://moldach.github.io/](https://moldach.github.io/)
++ Website at <a href="https://moldach.github.io/" target="_blank">`moldach.github.io`</a>
+
 ---
 
 ## License
