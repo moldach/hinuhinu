@@ -1,4 +1,5 @@
 library(shiny)
+library(curl)
 library(sf)
 library(tibble)
 library(here)
@@ -51,6 +52,7 @@ state_layers <- tibble(
 ### load the different layers
 #### dumping
 state_explosive_geo <- sf::read_sf(here::here("data/shapefiles/oceans/dumping/explosive_dumping.shp"))
+
 
 #### whale sanctuary
 state_whale_geo <- sf::read_sf(here::here("data/shapefiles/oceans/whales/state_whale_sanctuary.shp"))
