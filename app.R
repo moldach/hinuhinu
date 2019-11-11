@@ -13,9 +13,6 @@ library(stringr)
 library(readr)
 library(purrr)
 library(shinycssloaders)
-library(geoviz)
-library(rayshader)
-library(rgl)
 
 # Must be executed BEFORE rgl is loaded on headless devices.
 options(rgl.useNULL=TRUE)
@@ -168,10 +165,6 @@ precincts_geo <- sf::read_sf(here::here("data/shapefiles/locations/police/police
 # load latitude/longitude coordinates for cities
 cities_geolocation <- read_csv(here::here("data/cities_geolocation.csv"))
 
-rayshader_layers <- tibble(
-  rayshader_layer = c("Hawaii", "Maui", "Oahu", "Kauai")
-)
-
 ## Section 2 ____________________________________________________
 # set up the user interface
 ui <- navbarPage("hinuhinu",
@@ -281,20 +274,6 @@ ui <- navbarPage("hinuhinu",
                                                   
                                                   mainPanel(
                                                     plotOutput("plot4") %>% withSpinner(color = "#ad1d28")
-                                                  )
-                          )
-                          )
-                 ),
-                 tabPanel("Rayshader",
-                          fluidPage(sidebarLayout(position = "right",
-                                                  sidebarPanel( # designates location of following items
-                                                    wellPanel(style = "background: #E5C595",
-                                                              h4("Choose Island:"),
-                                                              htmlOutput("rayshader_selector"))
-                                                  ),
-                                                  
-                                                  mainPanel(
-                                                    rglwidgetOutput("plot5") %>% withSpinner(color = "#ad1d28")
                                                   )
                           )
                           )
@@ -733,237 +712,7 @@ server <- shinyServer(function(input, output) {
       dev.off()
     } 
   )
-  
-  output$rayshader_selector <- renderUI({ # creates basemap select box object called in ui
-    
-    data_available <- rayshader_layers
-    # creates a reactive list of available reliefs based on the state_basemap selection made
-    
-    selectInput(
-      inputId = "rayshader_layer", # name of input
-      label = "", # label displayed in ui
-      choices = data_available,
-      # calls unique values from the basemap column in the previously created table
-      selected = "Hawaii"
-    ) # default choice (not required)
-  })
-  
-  output$plot5 <- renderRglwidget({ # creates a the plot to go in the mainPanel
-    open3d()  
 
-    max_tiles <- 10
-    
-    if (input$rayshader_layer == "Hawaii") {
-      # Coordinates for Hawaii
-      lat = 19.593335
-      lon = -155.4880287
-      square_km = 50
-      
-      dem <- mapzen_dem(lat, lon, square_km, max_tiles = max_tiles)
-      # Get a stamen overlay (or a satellite overlay etc. by changing image_source)
-      overlay_image <-
-        slippy_overlay(dem,
-                       image_source = "stamen",
-                       image_type = "watercolor",
-                       png_opacity = 0.3,
-                       max_tiles = max_tiles)
-      
-      elmat = matrix(
-        raster::extract(dem, raster::extent(dem), method = 'bilinear'),
-        nrow = ncol(dem),
-        ncol = nrow(dem)
-      )
-      
-      scene <- elmat %>%
-        sphere_shade(sunangle = 270, texture = "bw") %>%
-        add_overlay(overlay_image)  %>%
-        add_shadow(
-          ray_shade(
-            elmat,
-            anglebreaks = seq(30, 60),
-            sunangle = 270,
-            multicore = TRUE,
-            lambert = FALSE,
-            remove_edges = FALSE
-          )
-        ) %>%
-        add_shadow(ambient_shade(elmat, multicore = TRUE, remove_edges = FALSE))
-      
-      rayshader::plot_3d(
-        scene,
-        elmat,
-        zscale = raster_zscale(dem) / 3,  #exaggerate elevation by 3x
-        solid = TRUE,
-        shadow = FALSE,
-        soliddepth = -69,
-        water=TRUE,
-        waterdepth = 0,
-        wateralpha = 0.5,
-        watercolor = "lightblue",
-        waterlinecolor = "white",
-        waterlinealpha = 0.5,
-        background = "#F5F5F2"
-      )
-    } else if(input$rayshader_layer == "Maui"){
-      # Coordinates for Maui
-      lat = 20.79224
-      lon = -156.319366
-      square_km = 25
-      
-      dem <- mapzen_dem(lat, lon, square_km, max_tiles = max_tiles)
-      # Get a stamen overlay (or a satellite overlay etc. by changing image_source)
-      overlay_image <-
-        slippy_overlay(dem,
-                       image_source = "stamen",
-                       image_type = "watercolor",
-                       png_opacity = 0.3,
-                       max_tiles = max_tiles)
-      
-      elmat = matrix(
-        raster::extract(dem, raster::extent(dem), method = 'bilinear'),
-        nrow = ncol(dem),
-        ncol = nrow(dem)
-      )
-      
-      scene <- elmat %>%
-        sphere_shade(sunangle = 270, texture = "bw") %>%
-        add_overlay(overlay_image)  %>%
-        add_shadow(
-          ray_shade(
-            elmat,
-            anglebreaks = seq(30, 60),
-            sunangle = 270,
-            multicore = TRUE,
-            lambert = FALSE,
-            remove_edges = FALSE
-          )
-        ) %>%
-        add_shadow(ambient_shade(elmat, multicore = TRUE, remove_edges = FALSE))
-      
-      rayshader::plot_3d(
-        scene,
-        elmat,
-        zscale = raster_zscale(dem) / 3,  #exaggerate elevation by 3x
-        solid = TRUE,
-        shadow = FALSE,
-        soliddepth = -60,
-        water=TRUE,
-        waterdepth = 0,
-        wateralpha = 0.5,
-        watercolor = "lightblue",
-        waterlinecolor = "white",
-        waterlinealpha = 0.5,
-        background = "#F5F5F2"
-      )
-    } else if(input$rayshader_layer == "Oahu"){
-      # Coordinates for Oahu
-      lat = 21.496524
-      lon = -157.990376
-      square_km = 20
-      
-      dem <- mapzen_dem(lat, lon, square_km, max_tiles = max_tiles)
-      # Get a stamen overlay (or a satellite overlay etc. by changing image_source)
-      overlay_image <-
-        slippy_overlay(dem,
-                       image_source = "stamen",
-                       image_type = "watercolor",
-                       png_opacity = 0.3,
-                       max_tiles = max_tiles)
-      
-      elmat = matrix(
-        raster::extract(dem, raster::extent(dem), method = 'bilinear'),
-        nrow = ncol(dem),
-        ncol = nrow(dem)
-      )
-      
-      scene <- elmat %>%
-        sphere_shade(sunangle = 270, texture = "bw") %>%
-        add_overlay(overlay_image)  %>%
-        add_shadow(
-          ray_shade(
-            elmat,
-            anglebreaks = seq(30, 60),
-            sunangle = 270,
-            multicore = TRUE,
-            lambert = FALSE,
-            remove_edges = FALSE
-          )
-        ) %>%
-        add_shadow(ambient_shade(elmat, multicore = TRUE, remove_edges = FALSE))
-      
-      rayshader::plot_3d(
-        scene,
-        elmat,
-        zscale = raster_zscale(dem) / 3,  #exaggerate elevation by 3x
-        solid = TRUE,
-        shadow = FALSE,
-        soliddepth = -69,
-        water=TRUE,
-        waterdepth = 0,
-        wateralpha = 0.5,
-        watercolor = "lightblue",
-        waterlinecolor = "white",
-        waterlinealpha = 0.5,
-        background = "#F5F5F2"
-      )
-    } else if(input$rayshader_slector == "Kauai"){
-      # Coordinates for Kauai
-      lat = 22.073357
-      lon = -159.501998
-      square_km = 30
-      
-      dem <- mapzen_dem(lat, lon, square_km, max_tiles = max_tiles)
-      # Get a stamen overlay (or a satellite overlay etc. by changing image_source)
-      overlay_image <-
-        slippy_overlay(dem,
-                       image_source = "stamen",
-                       image_type = "watercolor",
-                       png_opacity = 0.3,
-                       max_tiles = max_tiles)
-      
-      elmat = matrix(
-        raster::extract(dem, raster::extent(dem), method = 'bilinear'),
-        nrow = ncol(dem),
-        ncol = nrow(dem)
-      )
-      
-      scene <- elmat %>%
-        sphere_shade(sunangle = 270, texture = "bw") %>%
-        add_overlay(overlay_image)  %>%
-        add_shadow(
-          ray_shade(
-            elmat,
-            anglebreaks = seq(30, 60),
-            sunangle = 270,
-            multicore = TRUE,
-            lambert = FALSE,
-            remove_edges = FALSE
-          )
-        ) %>%
-        add_shadow(ambient_shade(elmat, multicore = TRUE, remove_edges = FALSE))
-      
-      rayshader::plot_3d(
-        scene,
-        elmat,
-        zscale = raster_zscale(dem) / 3,  #exaggerate elevation by 3x
-        solid = TRUE,
-        shadow = FALSE,
-        soliddepth = -79,
-        water=TRUE,
-        waterdepth = 0,
-        wateralpha = 0.5,
-        watercolor = "lightblue",
-        waterlinecolor = "white",
-        waterlinealpha = 0.5,
-        background = "#F5F5F2"
-      )
-      
-    }
-    
-    render_snapshot()
-    rglwidget()
-  })
-  
   
 }) # close the shinyServer
 
