@@ -13,9 +13,54 @@ library(stringr)
 library(readr)
 library(purrr)
 library(shinycssloaders)
+library(geoviz)
+library(rayshader)
+library(rgl)
 
 # Must be executed BEFORE rgl is loaded on headless devices.
 options(rgl.useNULL=TRUE)
+
+# Function for making island maps with Rayshader
+rayshade_me <- function(lat = lat, lon = lon, square_km = square_km, max_tiles = max_tiles){
+  # Get elevation data. Increase max_tiles for a higher resolution image.
+  # Set max_tiles = 40 to reproduce the example above.
+  dem <- mapzen_dem(lat, lon, square_km, max_tiles) # for mapzen
+
+  # Get a stamen overlay (or a satellite overlay etc. by changing image_source)
+  overlay_image <-
+    slippy_overlay(dem,
+                   image_source = "stamen",
+                   image_type = "watercolor",
+                   png_opacity = 0.3,
+                   max_tiles = max_tiles)
+
+  # Render the 'rayshader' scene.
+  elmat = matrix(
+    raster::extract(dem, raster::extent(dem), buffer=1000),
+    nrow = ncol(dem),
+    ncol = nrow(dem)
+  )
+
+  ambmat = ambient_shade(elmat)
+  
+  elmat %>%
+    sphere_shade(sunangle = 270, texture = "bw") %>%
+    add_water(detect_water(elmat), color="desert") %>%
+    add_shadow(ray_shade(elmat,zscale=3,maxsearch = 300),0.5) %>%
+    add_shadow(ambmat,0.5) %>% 
+    add_overlay(overlay_image) %>% 
+    plot_3d(elmat,
+            solid = T,
+            water = T,
+            waterdepth = 0,
+            wateralpha = 0.5,
+            watercolor = "lightblue",
+            waterlinecolor = "white",
+            waterlinealpha = 0.5,
+            zscale= raster_zscale(dem) / 3,
+            fov=0,theta=135,zoom=0.75,phi=45, windowsize = c(1000,800))
+  rglwidget()
+}
 
 # Add custom fonts
 font_add_google("Hanalei", "Hanalei")
@@ -165,6 +210,10 @@ precincts_geo <- sf::read_sf(here::here("data/shapefiles/locations/police/police
 # load latitude/longitude coordinates for cities
 cities_geolocation <- read_csv(here::here("data/cities_geolocation.csv"))
 
+rayshader_layers <- tibble(
+  rayshader_layer = c("Hawaii", "Maui", "Oahu", "Kauai")
+)
+
 ## Section 2 ____________________________________________________
 # set up the user interface
 ui <- navbarPage("hinuhinu",
@@ -274,6 +323,19 @@ ui <- navbarPage("hinuhinu",
                                                   
                                                   mainPanel(
                                                     plotOutput("plot4") %>% withSpinner(color = "#ad1d28")
+                                                  )
+                          )
+                          )
+                 ),
+                 tabPanel("Island Maps: Rayshader",
+                          fluidPage(sidebarLayout(position = "right",
+                                                  sidebarPanel( # designates location of following items
+                                                    wellPanel(style = "background: #E5C595",
+                                                              h4("Choose Island:"),
+                                                              htmlOutput("rayshader_selector"))
+                                                  ),
+                                                  mainPanel(
+                                                    rglwidgetOutput("plot5") %>% withSpinner(color = "#ad1d28")
                                                   )
                           )
                           )
@@ -712,8 +774,85 @@ server <- shinyServer(function(input, output) {
       dev.off()
     } 
   )
-
   
+  ## Sixth tab
+  
+  output$rayshader_selector <- renderUI({ # creates relief select box object called in ui
+    
+    data_available <- rayshader_layers
+    # creates a reactive list of available reliefs based on the island_basemap selection made
+    
+    selectInput(
+      inputId = "rayshader_layer", # name of input
+      label = "", # label displayed in ui
+      choices = unique(data_available), # calls list of available reliefs
+      selected = unique(data_available)[1]
+    )
+  })
+  
+  output$plot5 <- renderRglwidget({ # creates a the plot to go in the mainPanel
+    try(rgl.close())
+    #try(rgl.close())
+    max_tiles = 10
+    # load the basemap for four main islands
+    if (input$rayshader_layer == "Hawaii") {
+      # Coordinates for Hawaii
+      lat = 19.593335
+      lon = -155.4880287
+      square_km = 45
+      rayshade_me(lat = lat, lon = lon, square_km = square_km, max_tiles = max_tiles)
+      
+    } else if(input$rayshader_layer == "Maui"){
+      R version 3.6.1 (2019-07-05)
+      Platform: x86_64-pc-linux-gnu (64-bit)
+      Running under: Ubuntu 18.04.3 LTS
+      
+      Matrix products: default
+      BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.7.1
+      LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.7.1
+      
+      locale:
+        [1] LC_CTYPE=en_CA.UTF-8       LC_NUMERIC=C               LC_TIME=en_CA.UTF-8        LC_COLLATE=en_CA.UTF-8     LC_MONETARY=en_CA.UTF-8    LC_MESSAGES=en_CA.UTF-8   
+      [7] LC_PAPER=en_CA.UTF-8       LC_NAME=C                  LC_ADDRESS=C               LC_TELEPHONE=C             LC_MEASUREMENT=en_CA.UTF-8 LC_IDENTIFICATION=C       
+      
+      attached base packages:
+        [1] stats     graphics  grDevices utils     datasets  methods   base     
+      
+      other attached packages:
+        [1] rgl_0.100.30          rayshader_0.13.1      geoviz_0.2.1          shinycssloaders_0.2.0 purrr_0.3.3           readr_1.3.1           stringr_1.4.0        
+      [8] colorspace_1.4-1      showtext_0.7          showtextdb_2.0        sysfonts_0.8          ggplot2_3.2.1       lat = 20.7984
+  dplyr_0.8.3           raster_3.0-7         
+      [15] sp_1.3-2              here_0.1              tibble_2.1.3          sf_0.8-0              curl_4.2              shiny_1.4.0          
+      
+      loaded via a namespace (and not attached):
+        [1] jsonlite_1.6            foreach_1.4.7           assertthat_0.2.1        rayrender_0.4.2         tiff_0.1-5              yaml_2.2.0             
+      [7] progress_1.2.2          pillar_1.4.2            backports_1.1.5         lattice_0.20-38         glue_1.3.1              digest_0.6.22          
+      [13] manipulateWidget_0.10.0 promises_1.1.0          readbitmap_0.1.5        htmltools_0.4.0         httpuv_1.5.2            plyr_1.8.4             
+      [19] slippymath_0.3.1        pkgconfig_2.0.3         xtable_1.8-4            scales_1.0.0            webshot_0.5.1           jpeg_0.1-8.1           
+      [25] later_1.0.0             withr_2.1.2             lazyeval_0.2.2          magrittr_1.5            crayon_1.3.4            mime_0.7               
+      [31] evaluate_0.14           doParallel_1.0.15       imager_0.41.2           class_7.3-15            tools_3.6.1             prettyunits_1.0.2      
+      [37] hms_0.5.2               bmp_0.3                 munsell_0.5.0           compiler_3.6.1          e1071_1.7-2             rlang_0.4.1            
+      [43] classInt_0.4-2          units_0.6-5             grid_3.6.1              iterators_1.0.12        rstudioapi_0.10         htmlwidgets_1.5.1      
+      [49] crosstalk_1.0.0         igraph_1.2.4.1          miniUI_0.1.1.1          rmarkdown_1.16          gtable_0.3.0            codetools_0.2-16       
+      [55] abind_1.4-5             DBI_1.0.0               markdown_1.1            R6_2.4.1                knitr_1.26              rgdal_1.4-7            
+      [61] rgeos_0.5-2             fastmap_1.0.1           zeallot_0.1.0           rprojroot_1.3-2         KernSmooth_2.23-16      stringi_1.4.3          
+      [67] parallel_3.6.1          Rcpp_1.0.3              vctrs_0.2.0             png_0.1-7               tidyselect_0.2.5        xfun_0.11     
+      rayshade_me(lat = lat, lon = lon, square_km = square_km, max_tiles = max_tiles)
+      
+    } else if(input$rayshader_layer == "Oahu"){
+      lat = 21.4389
+      lon = -158.0001
+      square_km = 30
+      rayshade_me(lat = lat, lon = lon, square_km = square_km, max_tiles = max_tiles)
+      
+    } else if(input$rayshader_layer == "Kauai"){
+      lat = 22.0964
+      lon = -159.5261
+      square_km = 30
+      rayshade_me(lat = lat, lon = lon, square_km = square_km, max_tiles = max_tiles)
+      
+    }
+  })
 }) # close the shinyServer
 
 ## Section 4____________________________________________________
