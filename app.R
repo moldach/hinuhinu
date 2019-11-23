@@ -14,9 +14,6 @@ library(readr)
 library(purrr)
 library(shinycssloaders)
 
-# Must be executed BEFORE rgl is loaded on headless devices.
-options(rgl.useNULL=TRUE)
-
 # Add custom fonts
 font_add_google("Hanalei", "Hanalei")
 font_add_google("Hanalei Fill", "Hanalei Fill")
@@ -165,6 +162,10 @@ precincts_geo <- sf::read_sf(here::here("data/shapefiles/locations/police/police
 # load latitude/longitude coordinates for cities
 cities_geolocation <- read_csv(here::here("data/cities_geolocation.csv"))
 
+rayshader_layers <- tibble(
+  rayshader_layer = c("Hawaii", "Maui", "Oahu", "Kauai")
+)
+
 ## Section 2 ____________________________________________________
 # set up the user interface
 ui <- navbarPage("hinuhinu",
@@ -173,24 +174,24 @@ ui <- navbarPage("hinuhinu",
                             HTML('<meta name="viewport" content="width=1024">'),
                             
                             h1("The Hawaiian Islands"),
-                                    br(),
-                                    p(strong(em("\"Eddie Would Go...\""), "Eddie Aikau - Polynesian Voyaging Society")),
-                                    br(),
-                                    p("There has been a rich history of map making in Hawaii ever since Polynesians rowed in on their outriggers."),
-                                    p("The European discovery of Hawaii occurred on January 18, 1778, when English ships under the command of Captain James Cook sighted the islands of Oahu an Kauai.", 
-                                      "Cook was conducting one of the great exploratory voyages of history and ", 
-                                      a("mapmaking was an integral part of his work.", href = "https://www.storyofhawaiimuseum.com/the-story-of-hawaii/")), 
-                                    p("Today with new technological tools and ", a("open data ", href = "https://en.wikipedia.org/wiki/Open_data"), "stunning maps can be created at our fingertips easier then ever."),
-                                    p("Play with this interactive tool and find out!"),
-                                    br(),
-                                    br(),
-                                    div(img(src = "intro_figure.png", height = 420, width = 1000), style="text-align: center;"),
-                                    br(),
-                                    br(),
-                                    br(),
-                                    div(p(strong("Built by"), a("Matt.0", href = "https://twitter.com/mattoldach"), "using the power of Rstudio and Shiny."), 
-                                        p(strong("Sources:"), a("State of Hawaii Office of Planning", href = "https://planning.hawaii.gov/gis/download-gis-data/"), "for shapefiles,", a("EarthWorks", href = "https://earthworks.stanford.edu/catalog/stanford-qh711pf3383"), "for rasters"),
-                                        style="text-align: right;")
+                            br(),
+                            p(strong(em("\"Eddie Would Go...\""), "Eddie Aikau - Polynesian Voyaging Society")),
+                            br(),
+                            p("There has been a rich history of map making in Hawaii ever since Polynesians rowed in on their outriggers."),
+                            p("The European discovery of Hawaii occurred on January 18, 1778, when English ships under the command of Captain James Cook sighted the islands of Oahu an Kauai.", 
+                              "Cook was conducting one of the great exploratory voyages of history and ", 
+                              a("mapmaking was an integral part of his work.", href = "https://www.storyofhawaiimuseum.com/the-story-of-hawaii/")), 
+                            p("Today with new technological tools and ", a("open data ", href = "https://en.wikipedia.org/wiki/Open_data"), "stunning maps can be created at our fingertips easier then ever."),
+                            p("Play with this interactive tool and find out!"),
+                            br(),
+                            br(),
+                            div(img(src = "intro_figure.png", height = 420, width = 1000), style="text-align: center;"),
+                            br(),
+                            br(),
+                            br(),
+                            div(p(strong("Built by"), a("Matt.0", href = "https://twitter.com/mattoldach"), "using the power of Rstudio and Shiny."), 
+                                p(strong("Sources:"), a("State of Hawaii Office of Planning", href = "https://planning.hawaii.gov/gis/download-gis-data/"), "for shapefiles,", a("EarthWorks", href = "https://earthworks.stanford.edu/catalog/stanford-qh711pf3383"), "for rasters"),
+                                style="text-align: right;")
                           )
                  ),
                  tabPanel("State Maps",
@@ -213,7 +214,7 @@ ui <- navbarPage("hinuhinu",
                                                     plotOutput("plot1") %>% withSpinner(color = "#ad1d28")
                                                   )
                           )
-                 )
+                          )
                  ),
                  tabPanel("Island Maps: Ocean",
                           fluidPage(sidebarLayout(position = "right",
@@ -276,6 +277,17 @@ ui <- navbarPage("hinuhinu",
                                                     plotOutput("plot4") %>% withSpinner(color = "#ad1d28")
                                                   )
                           )
+                          )
+                 ),
+                 tabPanel("Rayshader",
+                          fluidPage(
+                            # embed_url("https://youtu.be/jZ7D5kv8U8I")
+                            HTML('<iframe width="560" height="315" src="https://youtu.be/5KEe-DKcimI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
+                            HTML('<iframe width="560" height="315" src="https://youtu.be/QaOlK-aczLk" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
+                            HTML('<iframe width="560" height="315" src="https://youtu.be/p0Va_dlpRzQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
+                            HTML('<iframe width="560" height="315" src="https://youtu.be/Z1b0eLrJkJ8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
+                            HTML('<iframe width="560" height="315" src="https://youtu.be/sPjy694ClGg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
+                            HTML('<iframe width="560" height="315" src="https://youtu.be/faCiHnL76Fw" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>')
                           )
                  ),
                  tags$style(type="text/css",
@@ -370,7 +382,7 @@ server <- shinyServer(function(input, output) {
       
       # load the state_basemap for four main islands
       state_plot <- readRDS(here::here("data/basemaps/ocean_state", state_df$filename))
-
+      
       if (input$state_layer == "Explosives Dumping") {
         print(state_plot + geom_sf(data = state_explosive_geo, color = darken("#F98866"), fill = "#F98866"))
       } else if(input$state_layer == "Whale Sanctuaries"){
@@ -389,7 +401,7 @@ server <- shinyServer(function(input, output) {
       dev.off()
     } 
   )
-
+  
   ## Third Tab
   
   output$island_ocean_basemap_selector <- renderUI({ # creates island_basemap select box object called in ui
@@ -432,13 +444,13 @@ server <- shinyServer(function(input, output) {
     # filter state_basemaps
     island_ocean_df %>%
       filter(location == input$island_ocean_basemap & relief == input$island_ocean_relief) -> island_ocean_df
-
+    
     # filter all shapefiles
     island_whale_geo %>% filter(AREA_NAME == input$island_ocean_basemap) -> island_whale_geo
     island_boating_geo %>% filter(island == input$island_ocean_basemap) -> island_boating_geo
     island_fishing_geo %>% filter(island == input$island_ocean_basemap) -> island_fishing_geo
     island_surfing_geo %>% filter(island == input$island_ocean_basemap) -> island_surfing_geo
-
+    
     # load the state_basemap for four main islands
     island_ocean_plot <- readRDS(here::here("data/basemaps/ocean_island", island_ocean_df$filename))
     if (input$island_ocean_layer == "Whale Sanctuaries"){
@@ -469,7 +481,7 @@ server <- shinyServer(function(input, output) {
         filter(location == input$island_ocean_basemap & relief == input$island_ocean_relief) -> island_ocean_df
       # load the state_basemap for four main islands
       island_ocean_plot <- readRDS(here::here("data/basemaps/ocean_island", island_ocean_df$filename))
-
+      
       # filter all shapefiles
       state_whale_geo %>% filter(AREA_NAME == input$island_ocean_basemap) -> state_whale_geo
       state_boating_geo %>% filter(island == input$island_ocean_basemap) -> state_boating_geo
@@ -598,7 +610,7 @@ server <- shinyServer(function(input, output) {
   )
   
   ## Fifth tab
-
+  
   output$road_basemap_selector <- renderUI({ # creates island_basemap select box object called in ui
     selectInput(
       inputId = "road_basemap", # name of input
@@ -608,12 +620,12 @@ server <- shinyServer(function(input, output) {
       selected = "Hawaiian Paradise Park "
     ) # default choice (not required)
   })
-
+  
   output$road_layer_selector <- renderUI({ # creates relief select box object called in ui
-
+    
     data_available <- road_layers
     # creates a reactive list of available reliefs based on the island_basemap selection made
-
+    
     selectInput(
       inputId = "road_layer", # name of input
       label = "", # label displayed in ui
@@ -621,14 +633,14 @@ server <- shinyServer(function(input, output) {
       selected = unique(data_available)[1]
     )
   })
-
+  
   output$plot4 <- renderPlot({ # creates a the plot to go in the mainPanel
     # filter island_basemaps
     road_df %>%
       filter(location == input$road_basemap) -> road_df
     # filter all shapefiles
     city <- cities_geolocation %>% filter(city == input$road_basemap)
-        pt <- data.frame(lat = city$lat, long = city$lon)
+    pt <- data.frame(lat = city$lat, long = city$lon)
     pt <- pt %>% st_as_sf(coords = c("long", "lat"), crs = 4326) %>% st_transform(2163)
     circle <- st_buffer(pt, dist = 24140.2)
     
@@ -643,7 +655,7 @@ server <- shinyServer(function(input, output) {
     hotels <- st_intersection(hotels_circle, hotels_geo)
     precincts_circle <- circle %>% st_transform(st_crs(precincts_geo))
     precincts <- st_intersection(precincts_circle, precincts_geo)
-
+    
     # load the basemap for four main islands
     road_plot <- readRDS(here::here("data/basemaps/roads", road_df$filename))
     if (input$road_layer == "Banks") {
@@ -712,7 +724,6 @@ server <- shinyServer(function(input, output) {
       dev.off()
     } 
   )
-
   
 }) # close the shinyServer
 
