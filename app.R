@@ -281,13 +281,12 @@ ui <- navbarPage("hinuhinu",
                  ),
                  tabPanel("Rayshader",
                           fluidPage(
-                            # embed_url("https://youtu.be/jZ7D5kv8U8I")
-                            HTML('<iframe width="560" height="315" src="https://youtu.be/5KEe-DKcimI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
-                            HTML('<iframe width="560" height="315" src="https://youtu.be/QaOlK-aczLk" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
-                            HTML('<iframe width="560" height="315" src="https://youtu.be/p0Va_dlpRzQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
-                            HTML('<iframe width="560" height="315" src="https://youtu.be/Z1b0eLrJkJ8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
-                            HTML('<iframe width="560" height="315" src="https://youtu.be/sPjy694ClGg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
-                            HTML('<iframe width="560" height="315" src="https://youtu.be/faCiHnL76Fw" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>')
+                            HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/5KEe-DKcimI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
+                            HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/QaOlK-aczLk" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
+                            HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/p0Va_dlpRzQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
+                            HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/Z1b0eLrJkJ8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
+                            HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/sPjy694ClGg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
+                            HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/faCiHnL76Fw" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>')
                           )
                  ),
                  tags$style(type="text/css",
