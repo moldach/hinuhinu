@@ -1,6 +1,6 @@
 [![lifecycle](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 
-# Mahalo: Create Maps of Hawaii directly from R and Shiny
+# *Hinuhinu* Create Maps of Hawaii directly from R and Shiny
 > "**Hinuhinu**": the Hawaiian word for **shiny**
 
 ![Recordit GIF](http://g.recordit.co/rxhSU7IQ08.gif)
