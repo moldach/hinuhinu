@@ -52,7 +52,7 @@ Reach out to me at one of the following places!
 
 + Twitter at <a href="https://twitter.com/MattOldach" target="_blank">`@MattOldach`</a>
 + E-mail: moldach686@gmail.com
-+ Website at <a href="https://moldach.github.io/" target="_blank">`moldach.github.io`</a>
++ Website at <a href="https://matthewoldach.com/" target="_blank">`matthewoldach.com`</a>
 
 ---
 
